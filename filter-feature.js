@@ -206,11 +206,11 @@ const object = {
 
 console.log(filterArrayOfObjectsByOptions(
 	arr, // array ro filter
-	{}, //options
+	{}, // options
 	[ 
 		(item) => !!item.country
 	], // filter callbacks
-	[] // sort callback
+	[] // sort callbacks
 ));
 
 console.log(filterArrayOfObjectsByOptions(
