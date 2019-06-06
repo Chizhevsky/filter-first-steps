@@ -22,17 +22,7 @@ function filterArrayOfObjectsByOptions(array = [], options = {}, filterCbs = [],
 				filteredArray = sortBySortArray(filteredArray, sortCbs);
 			}
 			if (!!view && filteredArray.length > 0) {
-				filteredArray = filteredArray.reduce((current, item) => {
-					let itemView = view;
-					let stringsToReplace = view.match(/{{.+}}/gm);
-					const pathes = stringsToReplace.map(str => {
-						return str.substring(str.lastIndexOf('{{') + 2, str.lastIndexOf("}}")).replace(/\s+/gm, '').split('.');
-					});
-					stringsToReplace.forEach((strToReplace, index) => {
-						itemView = itemView.replace(strToReplace, getValue(item, pathes[index]));
-					})
-					return [...current, {...item, view: itemView}];
-				}, []);
+				filteredArray = addViewCoolections(filteredArray, view);
 			}
 		}
 		return filteredArray;
@@ -40,6 +30,20 @@ function filterArrayOfObjectsByOptions(array = [], options = {}, filterCbs = [],
 		console.error(e);
 	}
 
+}
+
+function addViewCoolections(filteredArray, view) {
+	return filteredArray.reduce((current, item) => {
+		let itemView = view;
+		let stringsToReplace = view.match(/{{.+}}/gm);
+		const pathes = stringsToReplace.map(str => {
+			return str.substring(str.lastIndexOf('{{') + 2, str.lastIndexOf("}}")).replace(/\s+/gm, '').split('.');
+		});
+		stringsToReplace.forEach((strToReplace, index) => {
+			itemView = itemView.replace(strToReplace, getValue(item, pathes[index]));
+		})
+		return [...current, {...item, view: itemView}];
+	}, []);
 }
 
 function filterByOptions(filteredArray, options) {
