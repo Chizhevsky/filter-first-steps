@@ -1,4 +1,4 @@
-function filterArrayOfObjectsByOptions(array = [], options = {}, filterCbs = [], sortCbs = []) {
+function filterArrayOfObjectsByOptions(array = [], options = {}, filterCbs = [], sortCbs = [], view = '') {
 	let filteredArray = array;
 	try {
 		if (array.constructor !== Array) {
@@ -17,9 +17,22 @@ function filterArrayOfObjectsByOptions(array = [], options = {}, filterCbs = [],
 				filteredArray = filterByOptions(filteredArray, options);
 			}
 			if (sortCbs.constructor !== Array) {
-				throw new Error('Fourt argument should be array');
+				throw new Error('Fourth argument should be array');
 			} else {
 				filteredArray = sortBySortArray(filteredArray, sortCbs);
+			}
+			if (!!view && filteredArray.length > 0) {
+				filteredArray = filteredArray.reduce((current, item) => {
+					let itemView = view;
+					let stringsToReplace = view.match(/{{.+}}/gm);
+					const pathes = stringsToReplace.map(str => {
+						return str.substring(str.lastIndexOf('{{') + 2, str.lastIndexOf("}}")).replace(/\s+/gm, '').split('.');
+					});
+					stringsToReplace.forEach((strToReplace, index) => {
+						itemView = itemView.replace(strToReplace, getValue(item, pathes[index]));
+					})
+					return [...current, {...item, view: itemView}];
+				}, []);
 			}
 		}
 		return filteredArray;
@@ -210,7 +223,8 @@ console.log(filterArrayOfObjectsByOptions(
 	[ 
 		(item) => !!item.country
 	], // filter callbacks
-	[] // sort callbacks
+	[], // sort callbacks
+	'<div> {{ country.name }} </div>'
 ));
 
 console.log(filterArrayOfObjectsByOptions(
@@ -219,7 +233,8 @@ console.log(filterArrayOfObjectsByOptions(
 	[
 		(item) => !!item.name
 	],
-	[]
+	[],
+	''
 ));
 
 console.log(filterArrayOfObjectsByOptions(arr,
@@ -232,7 +247,8 @@ console.log(filterArrayOfObjectsByOptions(arr,
 		}
 	},
 	[],
-	[]
+	[],
+	''
 ));
 
 console.log(filterArrayOfObjectsByOptions(arr, 
@@ -245,5 +261,6 @@ console.log(filterArrayOfObjectsByOptions(arr,
 		}
 	},
 	[],
-	[]
+	[],
+	''
 ));
