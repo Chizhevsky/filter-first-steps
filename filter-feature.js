@@ -22,7 +22,7 @@ function filterArrayOfObjectsByOptions(array = [], options = {}, filterCbs = [],
 				filteredArray = sortBySortArray(filteredArray, sortCbs);
 			}
 			if (!!view && filteredArray.length > 0) {
-				filteredArray = addViewCoolections(filteredArray, view);
+				filteredArray = !!view.innerHTML ? addViewCollectionHTML(filteredArray, view) : addViewCollection(filteredArray, view);
 			}
 		}
 		return filteredArray;
@@ -32,7 +32,7 @@ function filterArrayOfObjectsByOptions(array = [], options = {}, filterCbs = [],
 
 }
 
-function addViewCoolections(filteredArray, view) {
+function addViewCollection(filteredArray, view) {
 	return filteredArray.reduce((current, item) => {
 		let itemView = view;
 		let stringsToReplace = view.match(/{{.+}}/gm);
@@ -42,7 +42,23 @@ function addViewCoolections(filteredArray, view) {
 		stringsToReplace.forEach((strToReplace, index) => {
 			itemView = itemView.replace(strToReplace, getValue(item, pathes[index]));
 		})
-		return [...current, {...item, view: itemView}];
+		return [...current, {...item, view: itemView }];
+	}, []);
+}
+
+function addViewCollectionHTML(filteredArray, view) {
+	return filteredArray.reduce((current, item) => {
+		let itemView = view.innerHTML;
+		let result = view.cloneNode(true);
+		let stringsToReplace = itemView.match(/{{.+}}/gm);
+		const pathes = stringsToReplace.map(str => {
+			return str.substring(str.lastIndexOf('{{') + 2, str.lastIndexOf("}}")).replace(/\s+/gm, '').split('.');
+		});
+		stringsToReplace.forEach((strToReplace, index) => {
+			itemView = itemView.replace(strToReplace, getValue(item, pathes[index]));
+		});
+		result.innerHTML = itemView;
+		return [...current, {...item, view: result }];
 	}, []);
 }
 
@@ -219,7 +235,23 @@ const object = {
 	}
 }
 
+const para = document.createElement("p");
+const innerPara = document.createElement("p");
+const textNode = document.createTextNode("{{country.name}}");
+innerPara.appendChild(textNode);
+para.appendChild(innerPara);
+
 // Examples:
+
+console.log(filterArrayOfObjectsByOptions(
+	arr,
+	{},
+	[
+		(item) => !!item.country
+	],
+	[],
+	para
+));
 
 console.log(filterArrayOfObjectsByOptions(
 	arr, // array ro filter
@@ -229,16 +261,6 @@ console.log(filterArrayOfObjectsByOptions(
 	], // filter callbacks
 	[], // sort callbacks
 	'<div> {{ country.name }} </div>'
-));
-
-console.log(filterArrayOfObjectsByOptions(
-	arr,
-	{},
-	[
-		(item) => !!item.name
-	],
-	[],
-	''
 ));
 
 console.log(filterArrayOfObjectsByOptions(arr,
